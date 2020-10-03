@@ -9,7 +9,8 @@ class StockDataset(torch.utils.data.Dataset):
 
     def __init__(self, ticker, train=True):
         full_data_frame = pd.read_csv('resources/stocks/{ticker}.us.txt'.format(ticker=ticker), index_col=0, parse_dates=True)
-        data_raw = full_data_frame.to_numpy()
+        price = full_data_frame['Close']
+        data_raw = price.to_numpy()
         data = sliding_windows(data_raw, self.LOOKBACK)
 
         idx, length = get_split_idx_and_length(train, data, self.TRAIN_SPLIT)
@@ -21,9 +22,9 @@ class StockDataset(torch.utils.data.Dataset):
         return len(self.inputs.shape[0])
 
     def __getitem__(self, idx):
-        input = self.inputs[idx]
-        target = self.targets[idx]
-        return {'input': input, 'target': target}
+        sample_input = self.inputs[idx]
+        sample_target = self.targets[idx]
+        return {'input': sample_input, 'target': sample_target}
 
 
 def get_split_idx_and_length(train, data, train_split):
@@ -42,3 +43,9 @@ def sliding_windows(data, lookback):
         windows.append(data[index: index + lookback])
     windows = np.array(windows)
     return windows
+
+
+if __name__ == "__main__":
+    dataset = StockDataset('msft')
+    print(dataset.__getitem__(1)['input'])
+    print(dataset.__getitem__(1)['target'])
