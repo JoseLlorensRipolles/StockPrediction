@@ -19,8 +19,8 @@ class StockDataset(torch.utils.data.Dataset):
 
         idx, length = get_split_idx_and_length(train, data, self.TRAIN_SPLIT)
 
-        self.inputs = torch.FloatTensor(data[idx:idx + length,:-1, :])
-        self.targets = torch.FloatTensor(data[idx:idx + length, -1, :])
+        self.inputs = torch.FloatTensor(data[idx:idx + length,:-1, :]).to('cuda')
+        self.targets = torch.FloatTensor(data[idx:idx + length, -1, :]).to('cuda')
 
     def __len__(self):
         return self.inputs.shape[0]
