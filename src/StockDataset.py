@@ -1,6 +1,8 @@
 import torch
 import pandas as pd
 import numpy as np
+from sklearn.preprocessing import MinMaxScaler
+
 
 class StockDataset(torch.utils.data.Dataset):
 
@@ -9,17 +11,19 @@ class StockDataset(torch.utils.data.Dataset):
 
     def __init__(self, ticker, train=True):
         full_data_frame = pd.read_csv('resources/stocks/{ticker}.us.txt'.format(ticker=ticker), index_col=0, parse_dates=True)
-        price = full_data_frame['Close']
+        price = full_data_frame[['Close']]
+        scaler = MinMaxScaler(feature_range=(-1, 1))
+        price['Close'] = scaler.fit_transform(price['Close'].values.reshape(-1,1))
         data_raw = price.to_numpy()
         data = sliding_windows(data_raw, self.LOOKBACK)
 
         idx, length = get_split_idx_and_length(train, data, self.TRAIN_SPLIT)
 
-        self.inputs = data[idx:idx + length,:-1]
-        self.targets = data[idx:idx + length, -1]
+        self.inputs = torch.FloatTensor(data[idx:idx + length,:-1, :])
+        self.targets = torch.FloatTensor(data[idx:idx + length, -1, :])
 
     def __len__(self):
-        return len(self.inputs.shape[0])
+        return self.inputs.shape[0]
 
     def __getitem__(self, idx):
         sample_input = self.inputs[idx]
