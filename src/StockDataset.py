@@ -9,22 +9,32 @@ class StockDataset(torch.utils.data.Dataset):
     TRAIN_SPLIT = 0.8
     LOOKBACK = 20
 
-    def __init__(self, ticker, train=True):
+    def __init__(self, ticker, is_train=True):
         full_data_frame = pd.read_csv(
             "resources/stocks/{ticker}.us.txt".format(ticker=ticker),
             index_col=0,
             parse_dates=True,
         )
         price = full_data_frame[["Close"]]
-        scaler = MinMaxScaler(feature_range=(-1, 1))
-        price["Close"] = scaler.fit_transform(price["Close"].values.reshape(-1, 1))
+
         data_raw = price.to_numpy()
-        data = sliding_windows(data_raw, self.LOOKBACK)
+        data_raw = self.get_split(is_train, data_raw)
+        data_raw = self.min_max_scaling(data_raw)
 
-        idx, length = get_split_idx_and_length(train, data, self.TRAIN_SPLIT)
+        windows = sliding_windows(data_raw, self.LOOKBACK)
+        windows = torch.FloatTensor(windows).to("cuda")
 
-        self.inputs = torch.FloatTensor(data[idx : idx + length, :-1, :]).to("cuda")
-        self.targets = torch.FloatTensor(data[idx : idx + length, -1, :]).to("cuda")
+        self.inputs = windows[:, :-1, :]
+        self.targets = windows[:, -1, :]
+
+    def get_split(self, is_train, data_raw):
+        idx, length = get_split_idx_and_length(is_train, data_raw, self.TRAIN_SPLIT)
+        data_raw = data_raw[idx : idx + length, :]
+        return data_raw
+
+    def min_max_scaling(self, data):
+        scaler = MinMaxScaler(feature_range=(-1, 1))
+        return scaler.fit_transform(data)
 
     def __len__(self):
         return self.inputs.shape[0]
@@ -35,8 +45,8 @@ class StockDataset(torch.utils.data.Dataset):
         return {"input": sample_input, "target": sample_target}
 
 
-def get_split_idx_and_length(train, data, train_split):
-    if train:
+def get_split_idx_and_length(is_train, data, train_split):
+    if is_train:
         idx = 0
         length = int(np.round(train_split * data.shape[0]))
     else:
