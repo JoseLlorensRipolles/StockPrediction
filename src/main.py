@@ -1,5 +1,5 @@
 import time
-from Architecture import LSTM
+from Architecture import LSTM, GRU
 from StockDataset import StockDataset
 import torch
 import numpy as np
@@ -10,7 +10,7 @@ import matplotlib.pyplot as plt
 def train():
     num_epochs = 100
 
-    model = LSTM(input_dim=1, hidden_dim=500, output_dim=1, num_layers=3).to('cuda')
+    model = GRU(input_dim=1, hidden_dim=500, output_dim=1, num_layers=3).to('cuda')
     criterion = torch.nn.MSELoss(reduction='mean')
     optimiser = torch.optim.Adam(model.parameters(), lr=0.001)
     dataset = StockDataset(ticker='msft', train=True)
@@ -34,7 +34,7 @@ def train():
 
 
 def test_visualization(train=True):
-    model = LSTM(input_dim=1, hidden_dim=500, output_dim=1, num_layers=3).to('cuda')
+    model = GRU(input_dim=1, hidden_dim=500, output_dim=1, num_layers=3).to('cuda')
     model.load_state_dict(torch.load('resources/models/model.pt'))
     dataset = StockDataset(ticker='msft', train=train)
     dataloader = DataLoader(dataset, batch_size=1000, shuffle=False)
@@ -59,4 +59,4 @@ def test_visualization(train=True):
 
 if __name__ == "__main__":
     train()
-    test_visualization(train=False)
+    test_visualization(train=True)
