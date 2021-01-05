@@ -34,6 +34,7 @@ class StockDataset(torch.utils.data.Dataset):
 
     def min_max_scaling(self, data):
         scaler = MinMaxScaler(feature_range=(-1, 1))
+        self.scaler = scaler
         return scaler.fit_transform(data)
 
     def __len__(self):

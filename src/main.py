@@ -1,6 +1,6 @@
 import time
-from Architecture import LSTM, GRU
-from StockDataset import StockDataset
+from architecture import LSTM, GRU
+from stock_dataset import StockDataset
 import torch
 import numpy as np
 from torch.utils.data import DataLoader
@@ -48,11 +48,18 @@ def prediction_visualization(train=True):
         outputs = np.hstack((outputs, y_train_pred.cpu().detach().numpy().flatten()))
         targets = np.hstack((targets, y_train.cpu().detach().numpy().flatten()))
 
-    plt.plot(targets)
-    plt.plot(outputs)
+    outputs = dataset.scaler.inverse_transform(outputs.reshape(-1, 1))
+    targets = dataset.scaler.inverse_transform(targets.reshape(-1, 1))
+
+    plt.figure(figsize=(15, 6))
+    plt.plot(targets, label="Ground truth")
+    plt.plot(outputs, label="Prediction")
+    plt.title("One day ahead prediction")
+    plt.savefig("resources/prediction.png")
+    plt.legend()
     plt.show()
 
 
 if __name__ == "__main__":
-    # train()
+    train()
     prediction_visualization(train=False)
