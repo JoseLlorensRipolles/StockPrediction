@@ -138,5 +138,6 @@ dmypy.json
 cython_debug/
 
 
-/resources/*
+/resources/stocks/*
+!/resources/stocks/msft.us.txt
 .vscode/*
